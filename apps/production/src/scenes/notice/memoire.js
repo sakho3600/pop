@@ -66,7 +66,8 @@ class Notice extends React.Component {
         return;
       }
       const editable = this.canUpdate(notice.PRODUCTEUR);
-      this.props.initialize({ ...notice, IMG: [notice.IMG] });
+      // this.props.initialize({ ...notice, IMG: [notice.IMG] });
+      this.props.initialize(notice);
       this.setState({ loading: false, notice, editable });
     });
   }
@@ -218,8 +219,7 @@ class Notice extends React.Component {
               <CustomField name="NVD" disabled={!this.state.editable} />
             </Col>
             <Col sm={6}>
-              <CustomField name="REFIMG" disabled={!this.state.editable} />
-              <CustomField name="REFIM" disabled={!this.state.editable} />
+              <CustomField name="IMG" disabled={true} />
               <CustomField name="VIDEO" disabled={!this.state.editable} />
               <CustomField name="TYPEIMG" disabled={!this.state.editable} />
             </Col>

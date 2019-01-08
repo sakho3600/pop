@@ -20,17 +20,32 @@ class FieldImages extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.input.value.length !== this.props.input.value.length) {
-      this.loadImages(nextProps.input.value);
+    console.log(nextProps.input.value);
+    if (Array.isArray(nextProps.input.value)) {
+      if (nextProps.input.value.length !== this.props.input.value.length) {
+        this.loadImages(nextProps.input.value);
+      }
+    } else {
+      if (nextProps.input.value !== this.props.input.value) {
+        this.loadImages(nextProps.input.value);
+      }
     }
   }
 
   onDrop(files) {
-    this.props.input.onChange([...this.props.input.value.concat(...files)]);
+    if (!Array.isArray(this.props.input.value)) {
+      this.props.input.onChange(files[0]);
+    } else {
+      this.props.input.onChange([...this.props.input.value.concat(...files)]);
+    }
   }
 
   loadImages(values) {
-    const images = values.map(e => {
+    let arr = values;
+    if (!Array.isArray(values)) {
+      arr = [values];
+    }
+    const images = arr.map(e => {
       let source = "";
       let key = "";
       let link = "";
@@ -61,17 +76,21 @@ class FieldImages extends React.Component {
   }
 
   renderImages() {
-    if (!this.props.input.value) {
-      return <div />;
-    }
+    // if (!this.props.input.value) {
+    //   return <div />;
+    // }
 
     const arr = this.state.images.map(({ source, key, link }, i) => {
       const button = !this.props.disabled ? (
         <Button
           color="danger"
           onClick={() => {
-            const arr = this.props.input.value.filter(e => e !== key);
-            this.props.input.onChange(arr);
+            if (Array.isArray(this.props.input.value)) {
+              const arr = this.props.input.value.filter(e => e !== key);
+              this.props.input.onChange(arr);
+            } else {
+              this.props.input.onChange("");
+            }
           }}
         >
           Supprimer
@@ -93,7 +112,13 @@ class FieldImages extends React.Component {
             <div className="no-image">Image absente</div>
           )}
           {button}
-          {link ? <Link to={`/notice/memoire/${key}`} target="_blank">{key}</Link> : <div />}
+          {link ? (
+            <Link to={`/notice/memoire/${key}`} target="_blank">
+              {key}
+            </Link>
+          ) : (
+            <div />
+          )}
         </Col>
       );
     });
