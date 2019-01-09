@@ -72,6 +72,10 @@ function findProducteur(REF, IDPROD, EMET) {
 
 function getMerimeeOrPalissyNotice(LBASE) {
   return new Promise(async (resolve, reject) => {
+    if (!LBASE) {
+      resolve();
+      return;
+    }
     const collection = findCollection(LBASE);
     if (!collection) {
       console.log(`No collection ${LBASE}`);
@@ -90,13 +94,10 @@ async function updateLinks(notice) {
     let LBASE = notice.LBASE || [];
     const toAdd = [...LBASE];
 
-    console.log("UPDATE LINKS");
-
     const palissyNotices = await Palissy.find({ "MEMOIRE.ref": REF });
     const merimeeNotices = await Merimee.find({ "MEMOIRE.ref": REF });
 
-    console.log("DELETE PALISSY ");
-    //Supression palissy
+    //Suppression palissy
     for (let i = 0; i < palissyNotices.length; i++) {
       if (!LBASE.includes(palissyNotices[i].REF)) {
         await palissyNotices[i].update({ $pull: { MEMOIRE: { ref: REF } } });
@@ -109,7 +110,6 @@ async function updateLinks(notice) {
       }
     }
 
-    console.log("DELETE Merimee ");
     //Supression Merimee
     for (let i = 0; i < merimeeNotices.length; i++) {
       if (!LBASE.includes(merimeeNotices[i].REF)) {
@@ -122,7 +122,6 @@ async function updateLinks(notice) {
         }
       }
     }
-    console.log("AJOUT  ");
     //Ajout
     for (let i = 0; i < toAdd.length; i++) {
       const notice = await getMerimeeOrPalissyNotice(toAdd[i]);
@@ -132,9 +131,11 @@ async function updateLinks(notice) {
       }
     }
   } catch (error) {
+    console.log("error", erro);
     capture(error);
   }
 }
+
 router.put(
   "/:ref",
   passport.authenticate("jwt", { session: false }),
@@ -173,7 +174,7 @@ router.put(
         res.sendStatus(200);
       })
       .catch(e => {
-        capture(e);
+        capture(JSON.stringify(e));
         res.sendStatus(500);
       });
   }

@@ -19,7 +19,8 @@ class Notice extends React.Component {
     notice: null,
     error: "",
     loading: true,
-    editable: true
+    editable: true,
+    imageFiles: []
   };
 
   componentWillMount() {
@@ -66,21 +67,28 @@ class Notice extends React.Component {
         return;
       }
       const editable = this.canUpdate(notice.PRODUCTEUR);
-      // this.props.initialize({ ...notice, IMG: [notice.IMG] });
       this.props.initialize(notice);
       this.setState({ loading: false, notice, editable });
     });
   }
 
-  onSubmit(values) {
+  async onSubmit(values) {
     this.setState({ saving: true });
-    API.updateNotice(this.state.notice.REF, "memoire", values).then(e => {
+    try {
+      await API.updateNotice(
+        this.state.notice.REF,
+        "memoire",
+        values,
+        this.state.imageFiles
+      );
       toastr.success(
         "Modification enregistrée",
         "La modification sera visible dans 1 à 5 min en diffusion"
       );
       this.setState({ saving: false });
-    });
+    } catch (e) {
+      toastr.error("Problème lors de l'enregistrement de la notice", e);
+    }
   }
 
   delete() {
@@ -129,7 +137,11 @@ class Notice extends React.Component {
             </div>
           </Row>
           <Row>
-            <FieldImages name="IMG" disabled={!this.state.editable} />
+            <FieldImages
+              name="IMG"
+              disabled={!this.state.editable}
+              updateImages={imageFiles => this.setState({ imageFiles })}
+            />
           </Row>
 
           <Section

@@ -20,24 +20,15 @@ class FieldImages extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log(nextProps.input.value);
-    if (Array.isArray(nextProps.input.value)) {
-      if (nextProps.input.value.length !== this.props.input.value.length) {
-        this.loadImages(nextProps.input.value);
-      }
-    } else {
-      if (nextProps.input.value !== this.props.input.value) {
-        this.loadImages(nextProps.input.value);
-      }
+    if (nextProps.input.value.length !== this.props.input.value.length) {
+      this.loadImages(nextProps.input.value);
     }
   }
 
   onDrop(files) {
-    if (!Array.isArray(this.props.input.value)) {
-      this.props.input.onChange(files[0]);
-    } else {
-      this.props.input.onChange([...this.props.input.value.concat(...files)]);
-    }
+    this.props.updateImages(files);
+    const previews = files.map(e => e.preview);
+    this.props.input.onChange([...this.props.input.value.concat(...previews)]);
   }
 
   loadImages(values) {
@@ -76,10 +67,6 @@ class FieldImages extends React.Component {
   }
 
   renderImages() {
-    // if (!this.props.input.value) {
-    //   return <div />;
-    // }
-
     const arr = this.state.images.map(({ source, key, link }, i) => {
       const button = !this.props.disabled ? (
         <Button
