@@ -58,6 +58,7 @@
 .image-gallery-image {
   height: 360px;
   text-align: center;
+  cursor: pointer;
 }
 
 .image-gallery-slide .image-gallery-image > img {

@@ -24,7 +24,7 @@ module.exports = env => {
 
   return {
     mode: "development",
-    entry: ["./src/index.js"],
+    entry: ["./src/index.js", "./../shared/index.js"],
     devtool: "source-map",
     output: {
       path: path.resolve("build"),
@@ -49,7 +49,7 @@ module.exports = env => {
         {
           test: /\.js$/,
           loader: "babel-loader",
-          include: path.resolve("src"),
+          include: [path.resolve("src"), path.resolve("./../shared")],
           exclude: /(node_modules|__tests__)/,
           query: {
             babelrc: true

@@ -18,7 +18,7 @@ import {
   SelectedFilters
 } from "@appbaseio/reactivesearch";
 import classnames from "classnames";
-import { MultiList } from "pop-shared";
+import { MultiList } from "../../../../shared";
 
 import Helmet from "../../components/Helmet";
 import List from "./subComponents/List";

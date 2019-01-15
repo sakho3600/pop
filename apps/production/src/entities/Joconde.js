@@ -1,4 +1,4 @@
-import { Mapping } from "pop-shared";
+import { Mapping } from "../../../shared";
 import Notice from "./Notice";
 
 export default class Joconde extends Notice {
@@ -33,7 +33,6 @@ export default class Joconde extends Notice {
     }
 
     //REFMIS ?
-
   }
 
   extractIMGNames = function(str) {

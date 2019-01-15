@@ -1,6 +1,6 @@
 import React from "react";
 import { Container } from "reactstrap";
-import { Mapping } from "pop-shared";
+import { Mapping } from "../../../../shared";
 import Importer from "./importer";
 
 import Merimee from "../../entities/Merimee";

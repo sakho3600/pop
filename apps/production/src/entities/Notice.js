@@ -1,4 +1,4 @@
-import { Mapping } from "pop-shared";
+import { MultiList } from "../../../shared";
 import validator from "validator";
 
 export default class Notice {
@@ -51,7 +51,6 @@ export default class Notice {
       }
     }
   }
-
 
   makeItFlat = function() {
     let flat = {};
