@@ -8,17 +8,19 @@ const Schema = new mongoose.Schema(
       type: String,
       default: "",
       documentation: {
-        description: `Producteur de la donnée déterminé grâce à la référence : \n
-      IV=INV\n
-      OA=CAOA\n
-      MH=CRMH\n
-      AR=ARCH\n
-      AP=SDAP\n
-      Autre=SAP`,
+        description: `Producteur de la donnée déterminé grâce à la référence ( dans l'ordre ):  \n
+      INV = REF commence par IVN ou IVR ou IVD ou IVC \n
+      CAOA = REF commence par  OA \n
+      CRMH = REF commence par MH \n
+      ARCH = REF commence par AR \n
+      UDAP = REF commence par AP et IDPROD contient Service départemental \n
+      SAP = IDPROD commence par SAP ou EMET commence par SAP  \n
+      Le reste en AUTRE \n`,
         generated: true,
         label: "Producteur"
       }
     },
+    
     BASE: {
       type: String,
       default: "Photographies (Mémoire)",

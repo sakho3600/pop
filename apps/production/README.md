@@ -24,3 +24,5 @@ Les tests sont pilotés par [Jest](https://jestjs.io/) et [Enzyme](http://airbnb
 
 Utiliser `npm run deploy:staging` ou `npm run deploy:production` en fonction de l'environnement souhaité. 
 La branche _master_ est automatiquement livré sur la plateforme de _staging_ et de _prod_ à chaque _push_ grâce à CircleCI. Il est donc recommandé de passer par des _Pull Request_ validées par un tiers.
+
+

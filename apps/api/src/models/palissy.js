@@ -494,8 +494,7 @@ const Schema = new mongoose.Schema(
       default: "",
       documentation: {
         description: "[PAS AFFICHE]",
-        label: "",
-        deprecated: true
+        label: ""
       }
     },
     INTE: {
