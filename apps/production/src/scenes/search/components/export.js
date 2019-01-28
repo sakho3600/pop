@@ -3,6 +3,7 @@ import { ReactiveComponent } from "@appbaseio/reactivesearch";
 import { Button } from "reactstrap";
 import { history } from "../../../redux/store";
 import operators from "./QueryBuilder/operators";
+import XLSX from "xlsx";
 import qs from "qs";
 
 export default class ExportComponent extends React.Component {
@@ -37,7 +38,8 @@ export default class ExportComponent extends React.Component {
     const secondes = ("0" + d.getSeconds()).slice(-2);
     const fileName = `${
       this.props.collection
-    }_${year}${month}${date}_${hours}h${minutes}m${secondes}s.csv`;
+    }_${year}${month}${date}_${hours}h${minutes}m${secondes}s.xlsx`;
+
     exportData(fileName, res);
     this.setState({ res: [], page: 0, run: false });
   }
@@ -92,17 +94,28 @@ async function exportData(fileName, entities) {
     return;
   }
 
-  const columns = ["REF"];
-  for (let property in entities[0]) {
-    if (
-      property.indexOf("_") !== 0 &&
-      property.indexOf("POP_") !== 0 && //because nobody ask for those fields and I think there gonna be complains if I export something people dont understand
-      property.indexOf("highlight") !== 0 &&
-      property !== "REF"
-    ) {
-      columns.push(property);
+  const header = [];
+  header.push("REF");
+
+  for (let i = 0; i < entities.length; i++) {
+    for (let property in entities[i]) {
+      if (
+        property.indexOf("_") === 0 ||
+        property.indexOf("POP_") === 0 ||
+        property.indexOf("highlight") === 0
+      ) {
+        delete entities[i][property];
+      }
     }
   }
+
+  // make the worksheet
+  var ws = XLSX.utils.json_to_sheet(entities, { header });
+  // add to workbook
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Notices");
+
+  // generate an XLSX file
 
   const csv = [];
 
@@ -111,8 +124,7 @@ async function exportData(fileName, entities) {
   if (search && search.q) {
     // Get an array of queries with rules as text.
     const queries = search.q.map(s => {
-      const operatorAsText = operators.filter(o => s.operator === o.value)[0]
-        .text;
+      const operatorAsText = operators.filter(o => s.operator === o.value)[0].text;
       const combinatorAsText = s.combinator.toLowerCase();
       return `${combinatorAsText} ${s.key} ${operatorAsText} ${s.value}`;
     });
@@ -122,41 +134,14 @@ async function exportData(fileName, entities) {
       .replace(/"/g, '""')
       .replace(/^(et|ou) /, "");
     // Ads this text on first line
-    csv.push(`"Critères de recherche : ${queryAsText}"`);
+    csv.push();
+
+    // make the worksheet
+    var ws2 = XLSX.utils.json_to_sheet([{ requete: queryAsText }], { skipHeader: true });
+
+    // add to workbook
+    XLSX.utils.book_append_sheet(wb, ws2, "Critères");
   }
 
-  csv.push(columns.join(";"));
-
-  for (let j = 0; j < entities.length; j++) {
-    const arr = [];
-    for (let i = 0; i < columns.length; i++) {
-      let value = entities[j][columns[i]];
-      if (Array.isArray(value)) {
-        value = value.join(";");
-      }
-      if (!value) value = "";
-      value = ("" + value).replace(/"/g, '""');
-      arr.push('"' + value + '"');
-    }
-    csv.push(arr.join(";"));
-  }
-
-  initiateFileDownload(csv.join("\n"), fileName);
-}
-
-function initiateFileDownload(csv, fileName) {
-  let blob = new Blob([csv]);
-  if (window.navigator.msSaveOrOpenBlob)
-    // IE hack; see http://msdn.microsoft.com/en-us/library/ie/hh779016.aspx
-    window.navigator.msSaveBlob(blob, fileName);
-  else {
-    let a = window.document.createElement("a");
-    a.href = window.URL.createObjectURL(blob, {
-      type: "text/plain;charset=UTF-8"
-    });
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click(); // IE: "Access is denied"; see: https://connect.microsoft.com/IE/feedback/details/797361/ie-10-treats-blob-url-as-cross-origin-and-denies-access
-    document.body.removeChild(a);
-  }
+  XLSX.writeFile(wb, fileName);
 }
