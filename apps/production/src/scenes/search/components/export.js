@@ -97,6 +97,8 @@ async function exportData(fileName, entities) {
   const header = [];
   header.push("REF");
 
+
+  //remove technnical fields
   for (let i = 0; i < entities.length; i++) {
     for (let property in entities[i]) {
       if (
