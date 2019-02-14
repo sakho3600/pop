@@ -43,6 +43,7 @@ function guidGenerator() {
   return S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4();
 }
 
+let tag = true;
 export default class RuleGroup extends React.Component {
   constructor(props) {
     super(props);
@@ -59,7 +60,6 @@ export default class RuleGroup extends React.Component {
   }
 
   updateStateQueries = queries => {
-    console.log("queries", queries);
     this.setState({ queries }, () => {
       this.updateUrlParams(queries);
       this.props.onUpdate(getMergedQueries(queries));
@@ -69,10 +69,28 @@ export default class RuleGroup extends React.Component {
   updateUrlParams = q => {
     const { history } = this.props;
     if (history) {
-      const currentUrlParams = history.location.search;
-      const targetUrlParams = qs.stringify({ q: q.map(e => e.data) }, { addQueryPrefix: true });
-      if (currentUrlParams !== targetUrlParams) {
-        history.replace(targetUrlParams);
+      const path = history.asPath || history.location.search;
+
+      const root = path.indexOf("?") === -1 ? path : path.substring(0, path.indexOf("?"));
+      const query = path.indexOf("?") === -1 ? "" : path.substring(path.indexOf("?"));
+
+      let newQuery = qs.stringify({ q: q.map(e => e.data) }, { addQueryPrefix: true });
+      console.log("0- path :", path);
+      console.log("1- root :", root);
+      console.log("1- query :", query);
+      console.log("2- newQuery :", newQuery);
+      console.log(newQuery === query);
+      if (newQuery !== query) {
+        history.replace(root + newQuery);
+        console.log("3- UPDATE !");
+        debugger;
+        // For next router, needs to add the route
+        if (history.asPath) {
+          //
+        } else {
+          // history.replace(newQuery);
+        }
+        console.log("targetUrlParams2", newQuery);
       }
     }
   };
@@ -82,7 +100,10 @@ export default class RuleGroup extends React.Component {
     if (!history) {
       return;
     }
-    const search = qs.parse(history.location.search, {
+
+    const path = history.asPath || history.location.search;
+
+    const search = qs.parse(path, {
       ignoreQueryPrefix: true
     });
 

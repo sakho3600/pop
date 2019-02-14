@@ -1,5 +1,7 @@
 import React from "react";
-import { QueryBuilder } from "pop-shared";
+import Router from "next/router";
+// import { QueryBuilder } from "pop-shared";
+import { QueryBuilder } from "../../../../shared/dist";
 
 const bases = [];
 bases.push({ key: "joconde", base: "Collections des musées de France (Joconde)" });
@@ -35,7 +37,7 @@ class SearchAdvanced extends React.Component {
           collection={key}
           base={base}
           componentId="mainSearch"
-          history={null}
+          history={Router}
           displayLabel={true}
           autocomplete={true}
         />
