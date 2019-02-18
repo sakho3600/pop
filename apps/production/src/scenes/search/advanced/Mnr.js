@@ -8,7 +8,8 @@ export default class Mnr extends React.Component {
       <AdvancedSearch
         displayLabel={true}
         autocomplete={true}
-        baseName="mnr"
+        basename="Oeuvres spoliées (MNR Rose-Valland)"
+        collection="mnr"
         onData={data => <Card key={data.REF} data={data} />}
       />
     );

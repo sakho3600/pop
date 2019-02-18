@@ -7,7 +7,8 @@ export default class Joconde extends React.Component {
   render() {
     return (
       <AdvancedSearch
-        baseName="joconde"
+        collection="joconde"
+        basename="Collections des musées de France (Joconde)"
         mapping={Mapping.joconde}
         displayLabel={true}
         autocomplete={true}

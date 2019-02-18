@@ -7,7 +7,8 @@ export default class Merimee extends React.Component {
   render() {
     return (
       <AdvancedSearch
-        baseName="merimee"
+        collection="merimee"
+        basename="Patrimoine architectural (Mérimée)"
         mapping={Mapping.merimee}
         onData={data => <Card key={data.REF} data={data} />}
       />

@@ -7,7 +7,8 @@ export default class Palissy extends React.Component {
   render() {
     return (
       <AdvancedSearch
-        baseName="palissy"
+        collection="palissy"
+        basename="Patrimoine mobilier (Palissy)"
         mapping={Mapping.palissy}
         onData={data => <Card key={data.REF} data={data} />}
       />

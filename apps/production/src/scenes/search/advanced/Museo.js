@@ -7,7 +7,7 @@ export default class Museo extends React.Component {
   render() {
     return (
       <AdvancedSearch
-        baseName="museo"
+        collection="museo"
         mapping={Mapping.museo}
         displayLabel={true}
         onData={data => <Card key={data.REF} data={data} />}

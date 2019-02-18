@@ -2,7 +2,8 @@ import React from "react";
 import { Row, Col, Container } from "reactstrap";
 import { ReactiveBase, ReactiveList } from "@appbaseio/reactivesearch";
 import ExportComponent from "../components/export";
-import { QueryBuilder } from "pop-shared";
+// import { QueryBuilder } from "pop-shared";
+import { QueryBuilder } from "../../../../../shared/dist";
 import { es_url } from "../../../config.js";
 import Header from "../components/Header";
 import Mapping from "../../../services/Mapping";
@@ -18,16 +19,18 @@ export default class Search extends React.Component {
   }
 
   render() {
-    const { baseName, onData } = this.props;
+    const { collection, onData, basename } = this.props;
+    console.log("this.props.autocomplete", this.props.autocomplete);
     return (
       <Container className="search">
-        <Header base={baseName} normalMode={false} />
-        <ReactiveBase url={`${es_url}/${baseName}`} app={baseName}>
+        <Header base={collection} normalMode={false} />
+        <ReactiveBase url={`${es_url}/${collection}`} app={collection}>
           <div>
             <Row>
               <Col md={12}>
                 <QueryBuilder
-                  collection={baseName}
+                  collection={collection}
+                  base={basename || null}
                   componentId="advancedSearch"
                   history={history}
                   displayLabel={this.props.displayLabel || false}
@@ -37,13 +40,13 @@ export default class Search extends React.Component {
             </Row>
             <Row>
               <Col md={12}>
-                <ExportComponent FILTER={["advancedSearch"]} collection={baseName} autocomplete />
+                <ExportComponent FILTER={["advancedSearch"]} collection={collection} />
               </Col>
             </Row>
             <div className="text-center my-3">
               Trier par :
               <select className="ml-2" onChange={e => this.setState({ sortKey: e.target.value })}>
-                {Object.keys(Mapping[baseName])
+                {Object.keys(Mapping[collection])
                   .filter(e => !["TICO", "TITR"].includes(e))
                   .map(e => (
                     <option key={e} value={e}>

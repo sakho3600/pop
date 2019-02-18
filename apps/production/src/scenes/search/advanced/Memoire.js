@@ -7,8 +7,9 @@ export default class Memoire extends React.Component {
   render() {
     return (
       <AdvancedSearch
-        baseName="memoire"
+        collection="memoire"
         mapping={Mapping.memoire}
+        basename="Photographies (Mémoire)"
         onData={data => <Card key={data.REF} data={data} />}
       />
     );
