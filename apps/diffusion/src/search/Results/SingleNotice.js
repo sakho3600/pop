@@ -20,6 +20,16 @@ const bases = {
 
 const capitalizeFirstLetter = s => s.charAt(0).toUpperCase() + s.slice(1);
 
+function generateLoca(notice) {
+  const arr = [];
+  if (notice.REG) arr.push(notice.REG);
+  if (notice.DPT) arr.push(departmentText(notice.DPT));
+  if (notice.COM) arr.push(notice.COM);
+  if (notice.EDIF) arr.push(notice.EDIF);
+  if (notice.ADRS) arr.push(notice.ADRS);
+  return arr.join(", ");
+}
+
 export default class SingleNotice extends React.Component {
   constructor(props) {
     super(props);
@@ -54,7 +64,7 @@ export default class SingleNotice extends React.Component {
           categories: data.DENO ? data.DENO.join(", ") : "",
           author: data.AUTR,
           data: data.SCLE,
-          loc: data.LOCA ? joinData([data.LOCA]) : joinData([data.REG, data.DPT, data.COM]),
+          loc: generateLoca(data),
           spe: data.DPRO
         };
         break;
