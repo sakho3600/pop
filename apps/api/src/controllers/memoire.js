@@ -11,6 +11,22 @@ const { uploadFile, formattedNow, checkESIndex, updateNotice, deleteFile } = req
 const { capture } = require("./../sentry.js");
 const passport = require("passport");
 
+async function transformBeforeUpdate(notice) {
+  if (notice.IMG !== undefined) {
+    notice.CONTIENT_IMAGE = notice.IMG ? "oui" : "non";
+  }
+  notice.DMAJ = formattedNow();
+  notice.POP_COMMENTAIRES = await checkIntegrity(notice);
+  console.log("notice.POP_COMMENTAIRES", notice.POP_COMMENTAIRES);
+}
+
+async function transformBeforeCreate(notice) {
+  notice.CONTIENT_IMAGE = notice.IMG ? "oui" : "non";
+  notice.DMAJ = notice.DMIS = formattedNow();
+  notice.POP_COMMENTAIRES = await checkIntegrity(notice);
+  notice.PRODUCTEUR = findProducteur(notice.REF, notice.IDPROD, notice.EMET);
+}
+
 function findCollection(ref = "") {
   const prefix = ref.substring(0, 2);
   switch (prefix) {
@@ -25,64 +41,6 @@ function findCollection(ref = "") {
     default:
       return "";
   }
-}
-
-function transformBeforeUpdate(notice) {
-  if (notice.IMG !== undefined) {
-    notice.CONTIENT_IMAGE = notice.IMG ? "oui" : "non";
-  }
-  notice.DMAJ = formattedNow();
-  console.log("CONTIENT_IMAGE", notice);
-}
-
-function transformBeforeCreate(notice) {
-  notice.CONTIENT_IMAGE = notice.IMG ? "oui" : "non";
-  notice.DMAJ = notice.DMIS = formattedNow();
-  notice.PRODUCTEUR = findProducteur(notice.REF, notice.IDPROD, notice.EMET);
-}
-
-async function checkMemoire(notice) {
-  const errors = [];
-  try {
-    //Check contact
-    if (!notice.CONTACT) {
-      errors.push("Le champ CONTACT ne doit pas être vide");
-    }
-    if (!notice.TICO && !notice.TITR && !notice.EDIF) {
-      errors.push("Cette notice devrait avoir un TICO ou un TITR ou un EDIF");
-    }
-
-    for (let i = 0; i < notice.LBASE.length; i++) {
-      const prefix = notice.LBASE[i].substring(0, 2);
-      if (["EA", "PA", "IA"].includes(prefix)) {
-        col = Merimee;
-      } else if (["IM", "PM", "EM"].includes(prefix)) {
-        col = Palissy;
-      } else {
-        errors.push(`Lien LBASE corrompu ${notice.LBASE[i]}`);
-        continue;
-      }
-      const doc = await col.findOne({ REF: notice.LBASE[i] });
-      if (!doc) {
-        errors.push(`La notice ${notice.LBASE[i]} contenue dans LBASE n'existe pas`);
-      }
-    }
-
-    if (notice.IMG) {
-      try {
-        const str =
-          notice.IMG.indexOf("http://www2.culture.gouv.fr") === -1
-            ? PREFIX_IMAGE + notice.IMG
-            : notice.IMG;
-        await rp.get(str);
-      } catch (e) {
-        errors.push(`Image ${str} est inaccessible`);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-  return errors;
 }
 
 function findProducteur(REF, IDPROD, EMET) {
@@ -114,7 +72,8 @@ function getMerimeeOrPalissyNotice(LBASE) {
       return;
     }
     const collection = findCollection(LBASE);
-    if (!collection) {
+
+    if (!obj) {
       console.log(`No collection ${LBASE}`);
       reject();
       return;
@@ -122,6 +81,61 @@ function getMerimeeOrPalissyNotice(LBASE) {
     const notice = await collection.findOne({ REF: LBASE });
     resolve(notice);
   });
+}
+
+async function checkIntegrity(notice) {
+  const errors = [];
+  try {
+    //Check contact
+    if (notice.CONTACT !== undefined && !notice.CONTACT) {
+      errors.push("Le champ CONTACT ne doit pas être vide");
+    }
+
+    if (
+      notice.TICO !== undefined &&
+      !notice.TICO &&
+      notice.TITR !== undefined &&
+      !notice.TITR &&
+      notice.EDIF !== undefined &&
+      !notice.EDIF
+    ) {
+      errors.push("Cette notice devrait avoir un TICO ou un TITR ou un EDIF");
+    }
+
+    if (notice.LBASE && Array.isArray(notice.LBASE)) {
+      for (let i = 0; i < notice.LBASE.length; i++) {
+        const prefix = notice.LBASE[i].substring(0, 2);
+        if (["EA", "PA", "IA"].includes(prefix)) {
+          col = Merimee;
+        } else if (["IM", "PM", "EM"].includes(prefix)) {
+          col = Palissy;
+        } else {
+          errors.push(`Lien LBASE corrompu ${notice.LBASE[i]}`);
+          continue;
+        }
+        const doc = await col.findOne({ REF: notice.LBASE[i] });
+        if (!doc) {
+          errors.push(`La notice ${notice.LBASE[i]} contenue dans LBASE n'existe pas`);
+        }
+      }
+    }
+
+    // if (notice.IMG !== undefined && notice.IMG) {
+    //   try {
+    //     const str =
+    //       notice.IMG.indexOf("http://www2.culture.gouv.fr") === -1
+    //         ? PREFIX_IMAGE + notice.IMG
+    //         : notice.IMG;
+    //     await rp.get(str);
+    //   } catch (e) {
+    //     errors.push(`Image ${str} est inaccessible`);
+    //   }
+    // }
+  } catch (e) {
+    console.log(e);
+    reject();
+  }
+  return errors;
 }
 
 async function updateLinks(notice) {
@@ -172,75 +186,85 @@ async function updateLinks(notice) {
     capture(error);
   }
 }
-router.put("/:ref", passport.authenticate("jwt", { session: false }), upload.any(), (req, res) => {
-  const ref = req.params.ref;
-  const notice = JSON.parse(req.body.notice);
+router.put(
+  "/:ref",
+  passport.authenticate("jwt", { session: false }),
+  upload.any(),
+  async (req, res) => {
+    const ref = req.params.ref;
+    const notice = JSON.parse(req.body.notice);
 
-  const arr = [];
-  for (let i = 0; i < req.files.length; i++) {
-    arr.push(
-      uploadFile(
-        `memoire/${filenamify(notice.REF)}/${filenamify(req.files[i].originalname)}`,
-        req.files[i]
-      )
-    );
+    const arr = [];
+    for (let i = 0; i < req.files.length; i++) {
+      arr.push(
+        uploadFile(
+          `memoire/${filenamify(notice.REF)}/${filenamify(req.files[i].originalname)}`,
+          req.files[i]
+        )
+      );
+    }
+
+    //Update IMPORT ID
+    if (notice.POP_IMPORT.length) {
+      const id = notice.POP_IMPORT[0];
+      delete notice.POP_IMPORT;
+      notice.$push = { POP_IMPORT: mongoose.Types.ObjectId(id) };
+    }
+
+    await transformBeforeUpdate(notice);
+
+    arr.push(updateLinks(notice));
+    arr.push(updateNotice(Memoire, ref, notice));
+
+    Promise.all(arr)
+      .then(() => {
+        res.sendStatus(200);
+      })
+      .catch(e => {
+        capture(e);
+        res.sendStatus(500);
+      });
   }
+);
 
-  //Update IMPORT ID
-  if (notice.POP_IMPORT.length) {
-    const id = notice.POP_IMPORT[0];
-    delete notice.POP_IMPORT;
-    notice.$push = { POP_IMPORT: mongoose.Types.ObjectId(id) };
+router.post(
+  "/",
+  passport.authenticate("jwt", { session: false }),
+  upload.any(),
+  async (req, res) => {
+    const notice = JSON.parse(req.body.notice);
+
+    notice.DMIS = notice.DMAJ = formattedNow();
+    const arr = [];
+    for (var i = 0; i < req.files.length; i++) {
+      arr.push(
+        uploadFile(
+          `memoire/${filenamify(notice.REF)}/${filenamify(req.files[i].originalname)}`,
+          req.files[i]
+        )
+      );
+    }
+
+    arr.push(updateLinks(notice));
+
+    await transformBeforeCreate(notice);
+
+    const obj = new Memoire(notice);
+
+    //send error if obj is not well sync with ES
+    checkESIndex(obj);
+
+    arr.push(obj.save());
+    Promise.all(arr)
+      .then(() => {
+        res.send({ success: true, msg: "OK" });
+      })
+      .catch(error => {
+        capture(error);
+        res.sendStatus(500);
+      });
   }
-
-  transformBeforeUpdate(notice);
-
-  arr.push(updateLinks(notice));
-  arr.push(updateNotice(Memoire, ref, notice));
-
-  Promise.all(arr)
-    .then(() => {
-      res.sendStatus(200);
-    })
-    .catch(e => {
-      capture(e);
-      res.sendStatus(500);
-    });
-});
-
-router.post("/", passport.authenticate("jwt", { session: false }), upload.any(), (req, res) => {
-  const notice = JSON.parse(req.body.notice);
-
-  notice.DMIS = notice.DMAJ = formattedNow();
-  const arr = [];
-  for (var i = 0; i < req.files.length; i++) {
-    arr.push(
-      uploadFile(
-        `memoire/${filenamify(notice.REF)}/${filenamify(req.files[i].originalname)}`,
-        req.files[i]
-      )
-    );
-  }
-
-  arr.push(updateLinks(notice));
-
-  transformBeforeCreate(notice);
-
-  const obj = new Memoire(notice);
-
-  //send error if obj is not well sync with ES
-  checkESIndex(obj);
-
-  arr.push(obj.save());
-  Promise.all(arr)
-    .then(() => {
-      res.send({ success: true, msg: "OK" });
-    })
-    .catch(error => {
-      capture(error);
-      res.sendStatus(500);
-    });
-});
+);
 
 router.get("/", (req, res) => {
   const offset = parseInt(req.query.offset) || 0;
@@ -260,9 +284,9 @@ router.get("/:ref", (req, res) => {
     }
     if (notice) {
       res.status(200).send(notice);
-    } else {
-      res.sendStatus(404);
+      return;
     }
+    return res.sendStatus(404);
   });
 });
 
