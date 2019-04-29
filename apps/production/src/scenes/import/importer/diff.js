@@ -8,7 +8,9 @@ function compare(importedObject, existed) {
 
   // I had to do this because sometimes, on IE 11, some fields are not compared well. The origin of the issue could be somewhere else but I couldnt find it
   let importedObj = JSON.parse(JSON.stringify(imported));
+  console.log("importedObj1", existed);
   let existedObj = JSON.parse(JSON.stringify(existed));
+  console.log("existedObj", existedObj);
 
   let d = diff(importedObj, existedObj);
 
