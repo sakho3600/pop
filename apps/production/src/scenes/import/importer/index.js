@@ -57,8 +57,9 @@ class Importer extends Component {
       }
 
       //RECUPERATION DES NOTICES EXISTANTES
-      const existingNotices = [];
+      const noticesArray = [];
       for (var i = 0; i < importedNotices.length; i++) {
+        const obj = { to: importedNotices[i] };
         this.setState({
           loading: true,
           loadingMessage: `Récupération des notices existantes ... `,
@@ -67,14 +68,21 @@ class Importer extends Component {
         const collection = importedNotices[i]._type;
         const notice = await api.getNotice(collection, importedNotices[i].REF);
         if (notice) {
-          existingNotices.push(notice);
+          obj.from = notice;
         }
+        noticesArray.push(obj);
       }
 
       //CALCUL DE LA DIFF
       this.setState({ loadingMessage: "Calcul des différences...." });
-      importedNotices = diff(importedNotices, existingNotices);
+      diff(noticesArray);
 
+      //MERGE
+      importedNotices = noticesArray.map(({ from, to }) => {
+        return to.merge(from);
+      });
+
+      //CONTROLE DU THESAURUS
       await controleThesaurus(importedNotices);
 
       for (var i = 0; i < importedNotices.length; i++) {

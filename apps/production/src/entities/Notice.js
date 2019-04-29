@@ -53,9 +53,21 @@ export default class Notice {
       }
     }
   }
+
+  merge = function(obj) {
+    for (let property in obj) {
+      if (this[property] === undefined) {
+        this[property] = obj[property];
+      }
+    }
+    return this;
+  };
   makeItFlat = function() {
     let flat = {};
-    for (var property in this) {
+    for (let property in this) {
+      if (!this._mapping[property]) {
+        continue;
+      }
       if (
         this.hasOwnProperty(property) &&
         property.indexOf("_") !== 0 &&

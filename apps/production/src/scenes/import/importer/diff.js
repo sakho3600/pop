@@ -38,35 +38,28 @@ function compare(importedObject, existed) {
   return differences;
 }
 
-export default function checkDiff(importedNotices, existingNotices) {
-  for (var i = 0; i < importedNotices.length; i++) {
-    let found = false;
-    for (var j = 0; j < existingNotices.length; j++) {
-      const existingNotice = existingNotices[j];
-      if (importedNotices[i].REF === existingNotice.REF) {
-        let differences = compare(importedNotices[i], existingNotice);
-
-        //remove differences based on generated fields
-        // differences = differences.filter(key => !fieldToNotCheck.includes(key));
-
-        importedNotices[i]._messages = differences.map(e => {
-          const from = JSON.stringify(existingNotice[e]);
-          const to = JSON.stringify(importedNotices[i][e]);
-          return `Le champ ${e} à évolué de ${from} à ${to}`;
-        });
-
-        if (differences.length) {
-          importedNotices[i]._status = "updated";
-        } else {
-          importedNotices[i]._status = "unchanged";
-        }
-        found = true;
+export default function checkDiff(notices) {
+  try {
+    for (var i = 0; i < notices.length; i++) {
+      const { from, to } = notices[i];
+      //Si pas de notice existante, on en créé une
+      if (!from) {
+        to._status = "created";
+        continue;
+      }
+      let differences = compare(to, from);
+      to._messages = differences.map(e => {
+        const fromData = JSON.stringify(from[e]);
+        const toData = JSON.stringify(to[e]);
+        return `Le champ ${e} à évolué de ${fromData} à ${toData}`;
+      });
+      if (differences.length) {
+        to._status = "updated";
+      } else {
+        to._status = "unchanged";
       }
     }
-    if (!found) {
-      importedNotices[i]._status = "created";
-    }
+  } catch (e) {
+    console.log("error", e);
   }
-
-  return importedNotices;
 }
