@@ -126,6 +126,13 @@ export default class Notice {
     return str;
   };
 
+  fixLink(link) {
+    return link
+      .replace(/^.*AffUrl\('(.*?)'\).*$/, "$1")
+      .replace(/^<a href="(\/documentation\/memoire\/[^"]+)?.*$/i, "http://www2.culture.gouv.fr$1")
+      .replace(/^<a href=([^ ]+)?.*$/i, "$1");
+  }
+
   stripHTML(html) {
     if (html === undefined) {
       return html;

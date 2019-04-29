@@ -7,5 +7,11 @@ export default class Merimee extends Notice {
     if (this.TICO) {
       this.TICO = this.stripHTML(this.TICO);
     }
+    if (this.DOSURL) {
+      this.DOSURL = this.fixLink(this.DOSURL);
+    }
+    if (this.DOSURLPDF) {
+      this.DOSURLPDF = this.fixLink(this.DOSURLPDF);
+    }
   }
 }
