@@ -39,4 +39,4 @@ async function checkErrors(notice) {
   return errors;
 }
 
-export { checkErrors, transformBeforeCreate, transformBeforeUpdate };
+module.exports = { checkErrors, transformBeforeCreate, transformBeforeUpdate };

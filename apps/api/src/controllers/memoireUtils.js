@@ -152,4 +152,10 @@ async function updateLinks(notice) {
   }
 }
 
-export { updateLinks, findProducteur, checkErrors, transformBeforeCreate, transformBeforeUpdate };
+module.exports = {
+  updateLinks,
+  findProducteur,
+  checkErrors,
+  transformBeforeCreate,
+  transformBeforeUpdate
+};

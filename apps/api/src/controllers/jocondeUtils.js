@@ -68,4 +68,4 @@ function transformBeforeCreate(notice) {
   });
 }
 
-export { checkErrors, transformBeforeCreate, transformBeforeUpdate };
+module.exports = { checkErrors, transformBeforeCreate, transformBeforeUpdate };

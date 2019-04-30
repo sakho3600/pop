@@ -11,13 +11,13 @@ const {
   hasCorrectCoordinates
 } = require("./utils");
 
-const { capture } = require("./../sentry.js");
+const { capture } = require("../sentry.js");
 
 function transformBeforeCreateOrUpdate(notice) {
   notice.CONTIENT_IMAGE = notice.MEMOIRE && notice.MEMOIRE.some(e => e.url) ? "oui" : "non";
 
   if (notice.COORM && notice.ZONE) {
-    const { coordinates, message } = convertCOORM(notice.COORM, notice.ZONE);
+    const { coordinates } = convertCOORM(notice.COORM, notice.ZONE);
     notice["POP_COORDINATES_POLYGON"] = {
       type: "Polygon",
       coordinates
@@ -40,7 +40,6 @@ function transformBeforeCreateOrUpdate(notice) {
     notice.POP_COORDONNEES = { lat: 0, lon: 0 };
   }
   notice.POP_CONTIENT_GEOLOCALISATION = hasCorrectCoordinates(notice) ? "oui" : "non";
-
   if (notice.DOSURL) {
     notice.DOSURL = fixLink(notice.DOSURL);
   }
@@ -57,44 +56,25 @@ function transformBeforeUpdate(notice) {
   transformBeforeCreateOrUpdate(notice);
 }
 
-function transformBeforeCreate(notice) {
-  notice.DMAJ = notice.DMIS = formattedNow();
-  transformBeforeCreateOrUpdate(notice);
-  switch (notice.REF.substring(0, 2)) {
-    case "IA":
-      notice.DISCIPLINE = notice.PRODUCTEUR = "Inventaire";
-      break;
-    case "PA":
-      notice.DISCIPLINE = notice.PRODUCTEUR = "Monuments Historiques";
-      break;
-    case "EA":
-      notice.DISCIPLINE = notice.PRODUCTEUR = "Architecture";
-      break;
-    default:
-      notice.DISCIPLINE = notice.PRODUCTEUR = "Autre";
-      break;
-  }
-}
-
 async function checkErrors(notice) {
   const errors = [];
   try {
+    //Check contact
     if (!notice.CONTACT) {
-      //Check contact
       errors.push("Le champ CONTACT ne doit pas être vide");
     }
 
-    const { message } = lambertToWGS84(notice.COOR, notice.ZONE); //Check coor
+    //Check coor
+    const { message } = lambertToWGS84(notice.COOR, notice.ZONE);
     if (message) {
       errors.push(message);
     }
-
+    //Palissy
     if (!notice.TICO && !notice.TITR) {
-      // check Title
       errors.push("Cette notice devrait avoir un TICO ou un TITR");
     }
 
-    const { RENV, REFP, REFE, REFO } = notice; // check Links
+    const { RENV, REFP, REFE, REFA } = notice;
     if (RENV && RENV.length) {
       const doc = await Merimee.findOne({ REF: RENV[0] });
       if (!doc) {
@@ -113,10 +93,10 @@ async function checkErrors(notice) {
         errors.push(`Le champ REFE ${REFE[0]} pointe vers une notice absente`);
       }
     }
-    if (REFO && REFO.length) {
-      const doc = await Palissy.findOne({ REF: REFO[0] });
+    if (REFA && REFA.length) {
+      const doc = await Merimee.findOne({ REF: REFA[0] });
       if (!doc) {
-        errors.push(`Le champ REFO ${REFO[0]} pointe vers une notice absente`);
+        errors.push(`Le champ REFA ${REFA[0]} pointe vers une notice absente`);
       }
     }
   } catch (e) {
@@ -124,6 +104,26 @@ async function checkErrors(notice) {
   }
 
   return errors;
+}
+
+function transformBeforeCreate(notice) {
+  notice.DMAJ = notice.DMIS = formattedNow();
+  transformBeforeCreateOrUpdate(notice);
+
+  switch (notice.REF.substring(0, 2)) {
+    case "IM":
+      notice.DISCIPLINE = notice.PRODUCTEUR = "Inventaire";
+      break;
+    case "PM":
+      notice.DISCIPLINE = notice.PRODUCTEUR = "Monuments Historiques";
+      break;
+    case "EM":
+      notice.DISCIPLINE = notice.PRODUCTEUR = "Etat";
+      break;
+    default:
+      notice.DISCIPLINE = notice.PRODUCTEUR = "Autre";
+      break;
+  }
 }
 
 function checkIfMemoireImageExist(notice) {
@@ -150,16 +150,45 @@ function checkIfMemoireImageExist(notice) {
   });
 }
 
-function populateREFO(notice) {
-  return new Promise(async (resolve, _reject) => {
-    const objs = await Palissy.find({ REFA: notice.REF });
-    const REFO = objs.map(e => e.REF);
-    resolve(REFO);
+function populateMerimeeREFO(notice) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!Array.isArray(notice.REFA)) {
+        resolve();
+        return;
+      }
+
+      const arr = [];
+
+      const merimees = await Merimee.find({ REFO: notice.REF });
+
+      for (let i = 0; i < merimees.length; i++) {
+        // Si on a enlevé l'objet de la notice, alors on l'enleve de palissy
+        if (!notice.REFA.includes(merimees[i].REF)) {
+          merimees[i].REFO = merimees[i].REFO.filter(e => e !== notice.REF);
+          arr.push(merimees[i].save());
+        }
+      }
+
+      for (let i = 0; i < notice.REFA.length; i++) {
+        if (!merimees.find(e => e.REF === notice.REFA[i])) {
+          const obj = await Merimee.findOne({ REF: notice.REFA[i] });
+          if (obj && Array.isArray(obj.REFO) && !obj.REFO.includes(notice.REF)) {
+            obj.REFO.push(notice.REF);
+            arr.push(obj.save());
+          }
+        }
+      }
+      await Promise.all(arr);
+      resolve();
+    } catch (error) {
+      capture(error);
+      resolve();
+    }
   });
 }
-
-module.exports = {
-  populateREFO,
+module.exports = { 
+  populateMerimeeREFO,
   checkIfMemoireImageExist,
   checkErrors,
   transformBeforeCreate,

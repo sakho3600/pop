@@ -16,7 +16,6 @@ const {
   checkIfMemoireImageExist
 } = require("./merimeeUtils");
 
-
 router.get("/newId", passport.authenticate("jwt", { session: false }), async (req, res) => {
   try {
     const prefix = req.query.prefix;
