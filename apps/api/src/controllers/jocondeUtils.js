@@ -1,15 +1,7 @@
-const express = require("express");
-const router = express.Router();
-const multer = require("multer");
-const mongoose = require("mongoose");
-const passport = require("passport");
-const filenamify = require("filenamify");
-const upload = multer({ dest: "uploads/" });
-const Joconde = require("../models/joconde");
 const Museo = require("../models/museo");
 const { capture } = require("../sentry.js");
 
-const { uploadFile, deleteFile, formattedNow, checkESIndex, updateNotice } = require("./utils");
+const { formattedNow } = require("./utils");
 
 function transformBeforeUpdate(notice) {
   if (notice.IMG !== undefined) {
@@ -50,7 +42,6 @@ function transformBeforeCreate(notice) {
     try {
       notice.CONTIENT_IMAGE = notice.IMG ? "oui" : "non";
       notice.DMAJ = notice.DMIS = formattedNow();
-
       if (notice.MUSEO) {
         const museo = await Museo.findOne({ REF: notice.MUSEO });
         if (museo && museo.location && museo.location.lat) {

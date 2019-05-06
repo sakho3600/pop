@@ -1,5 +1,4 @@
 const Merimee = require("../models/merimee");
-const Palissy = require("../models/palissy");
 const Memoire = require("../models/memoire");
 
 const {
@@ -187,7 +186,7 @@ function populateMerimeeREFO(notice) {
     }
   });
 }
-module.exports = { 
+module.exports = {
   populateMerimeeREFO,
   checkIfMemoireImageExist,
   checkErrors,
