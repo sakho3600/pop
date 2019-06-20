@@ -1,9 +1,9 @@
 import React from "react";
-import Joconde from "../../../scenes/import/joconde";
-import Importer from "../../../scenes/import/importer";
-import ImportTester from "../../setup/ImportTester";
-import api from "../../../services/api.js";
-import Mapping from "../../../services/mapping.js";
+import Joconde from "../../scenes/import/joconde";
+import Importer from "../../scenes/import/importer";
+import ImportTester from "../setup/ImportTester";
+import api from "../../services/api.js";
+import Mapping from "../../services/mapping.js";
 
 const importTester = new ImportTester({ api });
 importTester.disableAmplitude();

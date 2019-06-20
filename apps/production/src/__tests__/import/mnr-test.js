@@ -1,8 +1,8 @@
 import React from "react";
-import Mnr from "../../../scenes/import/mnr";
-import Importer from "../../../scenes/import/importer";
-import ImportTester from "../../setup/ImportTester";
-import api from "../../../services/api.js";
+import Mnr from "../../scenes/import/mnr";
+import Importer from "../../scenes/import/importer";
+import ImportTester from "../setup/ImportTester";
+import api from "../../services/api.js";
 
 const importTester = new ImportTester({ api });
 importTester.disableAmplitude();

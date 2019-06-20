@@ -69,16 +69,19 @@ export default class ImportTester {
   countFromRegex(r) {
     return Number(this.component.text().replace(r, "$1"));
   }
-
-  summaryPicturesCount(c) {
+  summaryPicturesCount() {
     return this.countFromRegex(/.*?([0-9]+) sont illustrées.*/);
   }
-
-  summaryNewDocsCount(c) {
+  summaryNewDocsCount() {
     return this.countFromRegex(/.*?([0-9]+) sont des nouvelles notices.*/);
   }
-
-  summaryInvalidDocsCount(c) {
+  summaryWarningDocsCount() {
+    return this.countFromRegex(/.*?([0-9]+) notices presentent un avertissement non bloquant */);
+  }
+  summaryUpdatedDocsCount() {
+    return this.countFromRegex(/.*?([0-9]+) sont des notices modifiées */);
+  }
+  summaryInvalidDocsCount() {
     return this.countFromRegex(/.*?([0-9]+) notices ne peuvent être importées.*/);
   }
 }
