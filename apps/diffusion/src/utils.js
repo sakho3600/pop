@@ -59,13 +59,13 @@ export function getNoticeInfo(notice) {
       }
 
       let localisations = [];
-      if (notice.VILLE-M) {
-        localisations.push(notice.VILLE-M);
+      if (notice.VILLE_M) {
+        localisations.push(notice.VILLE_M);
       }
       if (notice.DPT) {
         localisations.push(notice.DPT);
       }
-      if (notice.VILLE-M) {
+      if (notice.REGION) {
         localisations.push(notice.REGION);
       }
       let localisation = localisations.join(", ");
