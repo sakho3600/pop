@@ -53,7 +53,7 @@ export function getNoticeInfo(notice) {
       let title = notice.NOMOFF || notice.NOMANC || notice.NOMUSAGE;
       title = capitalizeFirstLetter(title);
 
-      let subtitle = ""
+      let subtitle = "";
       if(notice.DOMPAL){
         subtitle = notice.DOMPAL.join(", ");
       }
